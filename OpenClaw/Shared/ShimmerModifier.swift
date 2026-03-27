@@ -20,7 +20,7 @@ struct ShimmerModifier: ViewModifier {
                     .frame(width: geo.size.width * 0.6, height: geo.size.height)
                     .offset(x: geo.size.width * phase)
                 }
-                .clipped()
+                .mask(content)
             )
             .onAppear {
                 withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {

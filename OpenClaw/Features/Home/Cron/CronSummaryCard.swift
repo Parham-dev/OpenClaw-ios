@@ -12,9 +12,10 @@ struct CronSummaryCard: View {
             .max { ($0.lastRun ?? .distantPast) < ($1.lastRun ?? .distantPast) }
     }
 
-    /// Next job to fire (by nextRun date).
+    /// Next job to fire (by nextRun date, future only).
     private var nextUp: CronJob? {
-        jobs.filter { $0.nextRun != nil && $0.enabled }
+        let now = Date()
+        return jobs.filter { $0.enabled && ($0.nextRun ?? .distantPast) > now }
             .min { ($0.nextRun ?? .distantFuture) < ($1.nextRun ?? .distantFuture) }
     }
 

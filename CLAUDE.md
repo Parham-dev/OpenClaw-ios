@@ -4,13 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Run
 
-```bash
-# Build for simulator
-xcodebuild -scheme OpenClaw -destination 'platform=iOS Simulator,name=iPhone 16' build
-
-# Run tests (none exist yet — create with XCTest, no SPM test runner)
-xcodebuild -scheme OpenClaw -destination 'platform=iOS Simulator,name=iPhone 16' test
-```
+- Never build automatically, always user will run manually via xcode.
 
 No external dependencies. No Package.swift, CocoaPods, or SPM packages. Pure Apple frameworks only.
 

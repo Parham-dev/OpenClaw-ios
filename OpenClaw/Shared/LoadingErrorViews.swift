@@ -18,7 +18,6 @@ struct CardLoadingView: View {
             }
         }
         .frame(maxWidth: .infinity, minHeight: minHeight)
-        .shimmer()
     }
 }
 
@@ -38,6 +37,7 @@ struct CardErrorView: View {
 }
 
 /// A rounded rectangle placeholder block for skeleton loading.
+/// Shimmer is applied per-shape so it only animates over the filled area.
 private struct SkeletonRect: View {
     var width: CGFloat? = nil
     var height: CGFloat = 14
@@ -47,5 +47,6 @@ private struct SkeletonRect: View {
         RoundedRectangle(cornerRadius: radius)
             .fill(AppColors.neutral.opacity(0.12))
             .frame(width: width, height: height)
+            .shimmer()
     }
 }
