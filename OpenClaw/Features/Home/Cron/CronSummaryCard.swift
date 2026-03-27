@@ -1,9 +1,22 @@
 import SwiftUI
 
+/// Compact cron summary for the dashboard — shows last run result and next upcoming run.
 struct CronSummaryCard: View {
     let vm: CronSummaryViewModel
 
     private var jobs: [CronJob] { vm.data ?? [] }
+
+    /// Most recently run job (by lastRun date).
+    private var lastRan: CronJob? {
+        jobs.filter { $0.lastRun != nil }
+            .max { ($0.lastRun ?? .distantPast) < ($1.lastRun ?? .distantPast) }
+    }
+
+    /// Next job to fire (by nextRun date).
+    private var nextUp: CronJob? {
+        jobs.filter { $0.nextRun != nil && $0.enabled }
+            .min { ($0.nextRun ?? .distantFuture) < ($1.nextRun ?? .distantFuture) }
+    }
 
     var body: some View {
         CardContainer(
@@ -13,122 +26,115 @@ struct CronSummaryCard: View {
             isLoading: vm.isLoading && jobs.isEmpty
         ) {
             if !jobs.isEmpty {
-                VStack(spacing: 0) {
-                    let preview = Array(jobs.prefix(5))
-                    ForEach(Array(preview.enumerated()), id: \.element.id) { index, job in
-                        CronJobRow(job: job)
-                        if index < preview.count - 1 {
-                            Divider()
-                        }
+                VStack(spacing: Spacing.sm) {
+                    HStack(spacing: Spacing.sm) {
+                        // Last Run
+                        CronMiniStat(
+                            heading: "LAST RUN",
+                            icon: lastRunIcon,
+                            iconColor: lastRunColor,
+                            title: lastRan?.name ?? "\u{2014}",
+                            subtitle: lastRunSubtitle
+                        )
+
+                        Divider()
+                            .frame(height: 44)
+
+                        // Next Up
+                        CronMiniStat(
+                            heading: "NEXT UP",
+                            icon: "arrow.right.circle.fill",
+                            iconColor: AppColors.info,
+                            title: nextUp?.name ?? "\u{2014}",
+                            subtitle: nextUp?.nextRunFormatted ?? "\u{2014}"
+                        )
                     }
 
-                    if jobs.count > 5 {
-                        NavigationLink {
-                            CronJobsListView(jobs: jobs)
-                        } label: {
-                            HStack {
-                                Text("See All (\(jobs.count))")
-                                    .font(AppTypography.body)
-                                    .foregroundStyle(AppColors.primaryAction)
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(AppTypography.caption)
-                                    .foregroundStyle(AppColors.neutral)
-                            }
-                            .padding(.top, Spacing.xs + 2)
+                    // Job count footer
+                    HStack {
+                        Text("\(jobs.count) jobs")
+                            .font(AppTypography.micro)
+                            .foregroundStyle(AppColors.neutral)
+
+                        let failedCount = jobs.filter { $0.status == .failed }.count
+                        if failedCount > 0 {
+                            Text("\u{00B7} \(failedCount) failed")
+                                .font(AppTypography.micro)
+                                .foregroundStyle(AppColors.danger)
                         }
+
+                        Spacer()
                     }
                 }
             } else if vm.isLoading {
-                CardLoadingView()
+                CardLoadingView(minHeight: 60)
             } else if let err = vm.error {
-                CardErrorView(error: err)
+                CardErrorView(error: err, minHeight: 60)
             } else {
                 Text("No cron jobs configured.")
                     .font(AppTypography.body)
                     .foregroundStyle(AppColors.neutral)
-                    .frame(maxWidth: .infinity, minHeight: 60)
+                    .frame(maxWidth: .infinity, minHeight: 44)
             }
         }
     }
-}
 
-// MARK: - Row
-
-private struct CronJobRow: View {
-    let job: CronJob
-
-    var body: some View {
-        HStack(spacing: Spacing.xs + 2) {
-            Circle()
-                .fill(job.enabled ? AppColors.success : AppColors.neutral)
-                .frame(width: 8, height: 8)
-                .accessibilityLabel(job.enabled ? "Enabled" : "Disabled")
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(job.name)
-                    .font(AppTypography.body)
-                    .lineLimit(1)
-                Text(job.scheduleExpr)
-                    .font(AppTypography.microMono)
-                    .foregroundStyle(AppColors.neutral)
-            }
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 2) {
-                Image(systemName: statusIcon)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(statusColor)
-                    .accessibilityLabel(statusAccessibilityLabel)
-                Text(job.nextRunFormatted)
-                    .font(AppTypography.micro)
-                    .foregroundStyle(AppColors.neutral)
-            }
-        }
-        .padding(.vertical, 7)
-        .accessibilityElement(children: .combine)
-    }
-
-    private var statusIcon: String {
-        switch job.status {
+    private var lastRunIcon: String {
+        switch lastRan?.status {
         case .succeeded: "checkmark.circle.fill"
         case .failed:    "xmark.circle.fill"
         case .unknown:   "questionmark.circle.fill"
-        case .never:     "minus.circle"
+        default:         "minus.circle"
         }
     }
 
-    private var statusColor: Color {
-        switch job.status {
+    private var lastRunColor: Color {
+        switch lastRan?.status {
         case .succeeded: AppColors.success
         case .failed:    AppColors.danger
         case .unknown:   AppColors.warning
-        case .never:     AppColors.neutral
+        default:         AppColors.neutral
         }
     }
 
-    private var statusAccessibilityLabel: String {
-        switch job.status {
-        case .succeeded: "Last run succeeded"
-        case .failed:    "Last run failed"
-        case .unknown:   "Last run status unknown"
-        case .never:     "Never run"
-        }
+    private var lastRunSubtitle: String {
+        guard let lastRun = lastRan?.lastRun else { return "\u{2014}" }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter.localizedString(for: lastRun, relativeTo: Date())
     }
 }
 
-// MARK: - Full List
+// MARK: - Mini stat block
 
-struct CronJobsListView: View {
-    let jobs: [CronJob]
+private struct CronMiniStat: View {
+    let heading: String
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let subtitle: String
 
     var body: some View {
-        List(jobs) { job in
-            CronJobRow(job: job)
-                .listRowInsets(EdgeInsets(top: 0, leading: Spacing.md, bottom: 0, trailing: Spacing.md))
+        VStack(alignment: .leading, spacing: Spacing.xxs) {
+            Text(heading)
+                .font(AppTypography.micro)
+                .foregroundStyle(AppColors.neutral)
+                .tracking(AppTypography.sectionLabelTracking)
+
+            HStack(spacing: Spacing.xxs + 2) {
+                Image(systemName: icon)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(iconColor)
+                Text(title)
+                    .font(AppTypography.body)
+                    .lineLimit(1)
+            }
+
+            Text(subtitle)
+                .font(AppTypography.micro)
+                .foregroundStyle(AppColors.neutral)
         }
-        .navigationTitle("Cron Jobs")
-        .navigationBarTitleDisplayMode(.large)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 }

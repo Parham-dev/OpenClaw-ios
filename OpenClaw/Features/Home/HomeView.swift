@@ -2,17 +2,17 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var systemVM: SystemHealthViewModel
-    @State private var cronVM: CronSummaryViewModel
     @State private var outreachVM: OutreachStatsViewModel
     @State private var blogVM: BlogPipelineViewModel
 
+    private let cronVM: CronSummaryViewModel
+
     private let keychain: KeychainService
 
-    init(keychain: KeychainService) {
+    init(keychain: KeychainService, client: GatewayClient, cronVM: CronSummaryViewModel) {
         self.keychain = keychain
-        let client = GatewayClient(keychain: keychain)
+        self.cronVM = cronVM
         _systemVM   = State(initialValue: SystemHealthViewModel(repository: RemoteSystemHealthRepository(client: client)))
-        _cronVM     = State(initialValue: CronSummaryViewModel(repository: RemoteCronRepository(client: client)))
         _outreachVM = State(initialValue: OutreachStatsViewModel(repository: RemoteOutreachRepository(client: client)))
         _blogVM     = State(initialValue: BlogPipelineViewModel(repository: RemoteBlogRepository(client: client)))
     }
@@ -37,7 +37,7 @@ struct HomeView: View {
                 _ = await (s, c, o, b)
                 Haptics.shared.refreshComplete()
             }
-            .navigationTitle("OpenClaw")
+            .navigationTitle("Home")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

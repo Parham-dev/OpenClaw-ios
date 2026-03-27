@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Root view: shows TokenSetupView until a Keychain token is present,
-/// then transitions to HomeView with a smooth animation.
+/// then transitions to MainTabView with a smooth animation.
 struct ContentView: View {
     private var keychain = KeychainService()
     @State private var isAuthenticated: Bool
@@ -15,7 +15,7 @@ struct ContentView: View {
     var body: some View {
         Group {
             if isAuthenticated {
-                HomeView(keychain: keychain)
+                MainTabView(keychain: keychain)
             } else {
                 TokenSetupView(keychain: keychain) {
                     withAnimation(.easeInOut) {
