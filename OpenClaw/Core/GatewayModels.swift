@@ -17,19 +17,6 @@ struct GatewayResponse: Decodable {
 
 // MARK: - Request Bodies
 
-struct ExecToolRequest: Encodable, Sendable {
-    let tool: String
-    let args: Input
-
-    struct Input: Encodable, Sendable {
-        let command: String
-    }
-
-    init(args: Input) {
-        self.tool = "exec"
-        self.args = args
-    }
-}
 
 struct GatewayToolRequest: Encodable, Sendable {
     let tool = "gateway"

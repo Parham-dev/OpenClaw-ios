@@ -15,7 +15,7 @@ struct CommandButton: View {
                             .tint(command.iconColor)
                     } else {
                         Image(systemName: command.icon)
-                            .font(.title2)
+                            .font(AppTypography.statusIcon)
                             .foregroundStyle(command.iconColor)
                     }
                 }

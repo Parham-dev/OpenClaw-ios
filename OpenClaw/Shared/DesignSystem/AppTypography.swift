@@ -38,6 +38,12 @@ enum AppTypography {
     /// Small inline badge icon
     static let badgeIcon: Font = .system(size: 10)
 
+    // MARK: - Status
+    /// Result/status icon size (e.g. command result header)
+    static let statusIcon: Font = .title2
+    /// Tiny legend text (e.g. token breakdown labels)
+    static let nano: Font = .system(size: 9)
+
     // MARK: - Labels
     static let sectionLabel: Font = .caption
     static let sectionLabelTracking: CGFloat = 0.5

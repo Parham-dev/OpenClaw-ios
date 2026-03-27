@@ -84,7 +84,7 @@ private struct CommandResultSheet: View {
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     HStack(spacing: Spacing.xs) {
                         Image(systemName: result.isSuccess ? "checkmark.circle.fill" : "xmark.circle.fill")
-                            .font(.title2)
+                            .font(AppTypography.statusIcon)
                             .foregroundStyle(result.isSuccess ? AppColors.success : AppColors.danger)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(result.command.name)

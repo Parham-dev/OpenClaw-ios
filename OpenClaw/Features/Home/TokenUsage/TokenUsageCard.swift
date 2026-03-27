@@ -209,7 +209,7 @@ private struct LegendDot: View {
         HStack(spacing: 2) {
             Circle().fill(color).frame(width: 5, height: 5)
             Text("\(label) \(formatTokens(value))")
-                .font(.system(size: 9))
+                .font(AppTypography.nano)
                 .foregroundStyle(AppColors.neutral)
         }
     }

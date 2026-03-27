@@ -24,36 +24,39 @@ View → LoadableViewModel<T> → Repository protocol → GatewayClientProtocol 
 
 ### Key abstractions
 
-- **`LoadableViewModel<T>`** (`Core/LoadableViewModel.swift`): `@Observable @MainActor` base. Handles `data`, `isLoading`, `error`, `isStale`, `start()`, `refresh()`, `cancel()` with structured Task management. Feature VMs are one-liner subclasses.
+- **`LoadableViewModel<T>`** (`Core/LoadableViewModel.swift`): `@Observable @MainActor` base. Handles `data`, `isLoading`, `error`, `isStale`, `start()`, `refresh()`, `cancel()`. Feature VMs are one-liner subclasses.
 
-- **`GatewayClientProtocol`** (`Core/GatewayClient.swift`): `stats()` (GET, uses `.convertFromSnakeCase`) and `invoke()` (POST, camelCase — no snake_case conversion). Concrete `GatewayClient` is a `Sendable` struct.
+- **`GatewayClientProtocol`** (`Core/GatewayClient.swift`): Three methods: `stats()` (GET, `.convertFromSnakeCase`), `statsPost()` (POST to `/stats/*`, `.convertFromSnakeCase`), `invoke()` (POST to `/tools/invoke`, camelCase — no conversion).
 
-- **Repository protocols** (`Core/Repositories/`): One per feature. `Remote*Repository` owns a `MemoryCache<T>` actor and maps DTO→domain. `CronDetailRepository` supports paginated runs and session trace fetching.
+- **Repository protocols** (`Core/Repositories/`): One per feature. `Remote*Repository` owns a `MemoryCache<T>` actor and maps DTO→domain.
 
 - **DTOs vs Domain models**: `Decodable` types in `Core/Networking/DTOs/` (suffixed `DTO`). Domain models in feature folders with `init(dto:)` mappers. Domain types use `Date`, `URL?` etc.
 
 ### Navigation
 
-`ContentView` (auth gate) → `MainTabView` (5 tabs): Home, Crons, Pipelines (placeholder), Memory (placeholder), Chat (placeholder). Settings accessed via Home toolbar gear icon.
+`ContentView` (auth gate) → `MainTabView` (5 tabs): Home, Crons, Pipelines (placeholder), Memory (placeholder), Chat (placeholder). Settings via Home toolbar gear.
 
 Shared state: `CronSummaryViewModel` and `CronDetailRepository` created once in `MainTabView`, shared across tabs.
 
-Navigation depth: Crons tab → `CronDetailView` → tap run → `SessionTraceView`.
+Depth: Crons tab → `CronDetailView` → tap run → `SessionTraceView`.
 
 ### Design system
 
 All views use semantic tokens — never raw literals:
 - `Spacing` — 4pt grid (xxs=4 through xxl=48)
 - `AppColors` — `.success`, `.danger`, `.metricPrimary`, `.gauge(percent:warn:critical:)`
-- `AppTypography` — Dynamic Type styles (`.heroNumber`, `.cardTitle`, `.actionIcon`, `.badgeIcon`)
+- `AppTypography` — `.heroNumber`, `.cardTitle`, `.actionIcon`, `.badgeIcon`, `.statusIcon`, `.nano`
 - `AppRadius` — `.sm`(8), `.md`(10), `.lg`(12), `.card`(16)
 - `Formatters` — cached `RelativeDateTimeFormatter` and `DateFormatter`
 
+Sub-grid visual details (2pt padding, 6pt dots, 8pt indicator circles) are acceptable as raw values — they're too small for tokens.
+
 ### Shared components
 
-- `CronStatusDot` / `CronStatusBadge` (`Shared/CronStatusViews.swift`) — reused across cron list, detail, and trace views. Badge supports `.small` and `.large` styles.
-- `TokenBreakdownBar` (`Features/Crons/TokenBreakdownBar.swift`) — proportional bar + legend showing input/output/reasoning token split.
-- `CardContainer`, `CardLoadingView`, `CardErrorView` — standard card shells for dashboard.
+- `CronStatusDot` / `CronStatusBadge` — reused across cron list, detail, and trace. Badge supports `.small` and `.large` styles.
+- `TokenBreakdownBar` — proportional bar + legend (input/output/reasoning split).
+- `CardContainer`, `CardLoadingView`, `CardErrorView` — dashboard card shells.
+- `CommandButton` — reusable quick action button with icon, label, loading state.
 
 ## Conventions
 
@@ -63,15 +66,20 @@ All views use semantic tokens — never raw literals:
 - **Accessibility**: All custom visual components need `.accessibilityElement` + `.accessibilityLabel`.
 - **Haptics**: `Haptics.shared` for user action feedback (refresh, save, errors).
 - **UI**: Design tokens only. Skeleton shimmer via `.shimmer()`. `CardLoadingView`/`CardErrorView` for card states.
-- **File size**: Keep files under 300 lines. Extract components into separate files when a view grows beyond that.
-- **Pagination**: Large lists must use limit/offset with "Load More" button. Deduplicate on append by ID. See `CronDetailViewModel` for the pattern.
-- **Formatters**: Always use `Formatters.relativeString(for:)` / `Formatters.absoluteString(for:)`. Never instantiate formatters inline.
-- **Markdown**: Use `Markdown(text).markdownTheme(.openClaw)` from MarkdownUI for LLM-generated content. Never use `AttributedString(markdown:)`. MarkdownUI v2 does not support `.table` theme customization.
+- **File size**: Keep files under 300 lines. Extract into separate files when growing.
+- **Pagination**: Limit/offset with "Load More" button. Deduplicate on append by ID. See `CronDetailViewModel`.
+- **Formatters**: Always use `Formatters.relativeString(for:)` / `Formatters.absoluteString(for:)`. Never instantiate inline.
+- **Markdown**: `Markdown(text).markdownTheme(.openClaw)` for LLM content. Never `AttributedString(markdown:)`. MarkdownUI v2 has no `.table` theme API.
+- **Terminal output**: Strip ANSI codes with `CommandsViewModel.stripAnsi()`. Display in monospace (`AppTypography.captionMono`) with tinted background.
+- **Confirmations**: Destructive actions (run cron, disable job, run command) must show an alert with confirmation before executing.
 
 ## Gateway API Gotchas
 
-- **`stats()` vs `invoke()`**: GET endpoints use snake_case JSON keys (decoder uses `.convertFromSnakeCase`). POST `/tools/invoke` responses use camelCase — no conversion. Only add `CodingKeys` for nested snake_case fields (e.g. `Usage.input_tokens`).
-- **Cron schedules**: Jobs can be `kind: "cron"` (has `expr`) or `kind: "every"` (has `everyMs`, no `expr`). DTO `expr` field must be optional.
-- **Session history**: Uses `sessions_history` tool (not `sessions`). Takes `sessionKey` (full format like `agent:orchestrator:subagent:UUID`), not `sessionId` (bare UUID). Cron run DTOs may have either or both — domain model stores both, trace view tries `sessionKey` first.
-- **Gateway config**: Requires `tools.sessions.visibility = "all"` for cross-session trace access, and `tools.profile = "full"` for session tools.
-- **Error responses**: The gateway returns `{"status":"error","error":"..."}` or `{"status":"forbidden","error":"..."}` which don't match DTOs — these fail at decode. The `invoke()` method throws `GatewayError.httpError` for HTTP errors, but in-envelope errors (200 OK with error payload) surface as decode failures. Handle gracefully in VMs.
+- **Three client methods**: `stats()` for GET (snake_case decoder), `statsPost()` for POST to `/stats/*` (snake_case decoder), `invoke()` for POST to `/tools/invoke` (camelCase, no conversion). DTOs for `stats`/`statsPost` don't need `CodingKeys`; DTOs for `invoke` only need `CodingKeys` for nested snake_case fields.
+- **URL construction**: `stats()` and `statsPost()` build URLs via string interpolation, not `.appending(path:)` — the latter percent-encodes `?` breaking query strings.
+- **Shell commands**: The `exec` tool is NOT available via `/tools/invoke` (requires agent sandbox). Use `POST /stats/exec` instead with an allowlisted command key (e.g. `{"command": "doctor"}`). The server maps keys to actual commands.
+- **Cron list**: Pass `includeDisabled: true` to get all jobs including disabled ones.
+- **Cron schedules**: `kind: "cron"` has `expr`, `kind: "every"` has `everyMs` (no `expr`). DTO `expr` must be optional.
+- **Session history**: Tool is `sessions_history` (not `sessions`). Takes `sessionKey` (full format), not `sessionId` (bare UUID). Domain model stores both, trace view tries `sessionKey` first.
+- **Error responses**: Gateway in-envelope errors (200 OK with `{"status":"error"}`) surface as decode failures. Handle gracefully in VMs.
+- **System health polling**: `SystemHealthViewModel` has its own polling loop (15s) — starts on `onAppear`, stops on `onDisappear`. Not a `LoadableViewModel` subclass.
