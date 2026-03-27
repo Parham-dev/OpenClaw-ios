@@ -15,7 +15,7 @@ class LoadableViewModel<T: Sendable> {
     private let loader: @Sendable () async throws -> T
     private var activeTask: Task<Void, Never>?
 
-    nonisolated init(loader: @escaping @Sendable () async throws -> T) {
+    init(loader: @escaping @Sendable () async throws -> T) {
         self.loader = loader
     }
 

@@ -5,8 +5,8 @@ import os
 
 /// Abstraction over gateway networking — ViewModels depend on this, not concrete types.
 protocol GatewayClientProtocol: Sendable {
-    func stats<Response: Decodable & Sendable>(_ path: String) async throws -> Response
-    func invoke<Body: Encodable & Sendable, Response: Decodable & Sendable>(_ body: Body) async throws -> Response
+    func stats<Response: Decodable>(_ path: String) async throws -> Response
+    func invoke<Body: Encodable, Response: Decodable>(_ body: Body) async throws -> Response
 }
 
 // MARK: - Implementation
@@ -26,7 +26,7 @@ struct GatewayClient: GatewayClientProtocol, Sendable {
 
     // MARK: - GET /stats/*  (plain JSON, no envelope)
 
-    func stats<Response: Decodable & Sendable>(_ path: String) async throws -> Response {
+    func stats<Response: Decodable>(_ path: String) async throws -> Response {
         let token = try requireToken()
 
         let url = Self.baseURL.appending(path: path)
@@ -46,7 +46,7 @@ struct GatewayClient: GatewayClientProtocol, Sendable {
 
     // MARK: - POST /tools/invoke  (wrapped: result.content[0].text → JSON string)
 
-    func invoke<Body: Encodable & Sendable, Response: Decodable & Sendable>(
+    func invoke<Body: Encodable, Response: Decodable>(
         _ body: Body
     ) async throws -> Response {
         let token = try requireToken()
