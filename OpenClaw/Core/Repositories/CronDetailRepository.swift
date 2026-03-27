@@ -7,6 +7,7 @@ struct CronRunsPage: Sendable {
 
 protocol CronDetailRepository: Sendable {
     func fetchRuns(jobId: String, limit: Int, offset: Int) async throws -> CronRunsPage
+    func fetchSessionTrace(sessionKey: String, limit: Int) async throws -> SessionTrace
     func triggerRun(jobId: String) async throws
     func setEnabled(jobId: String, enabled: Bool) async throws
 }
@@ -23,6 +24,12 @@ final class RemoteCronDetailRepository: CronDetailRepository {
         let response: CronRunsResponseDTO = try await client.invoke(body)
         let runs = response.entries.map(CronRun.init)
         return CronRunsPage(runs: runs, hasMore: runs.count >= limit)
+    }
+
+    func fetchSessionTrace(sessionKey: String, limit: Int) async throws -> SessionTrace {
+        let body = SessionHistoryToolRequest(args: .init(sessionKey: sessionKey, limit: limit, includeTools: true))
+        let dto: SessionHistoryDTO = try await client.invoke(body)
+        return TraceStep.from(dto: dto)
     }
 
     func triggerRun(jobId: String) async throws {

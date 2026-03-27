@@ -14,6 +14,9 @@ struct CronRun: Sendable, Identifiable {
     let inputTokens: Int
     let outputTokens: Int
     let totalTokens: Int
+    /// Full session key for sessions_history API (e.g. "agent:orchestrator:subagent:UUID")
+    let sessionKey: String?
+    /// Short session ID (UUID only)
     let sessionId: String?
 
     var durationFormatted: String {
@@ -43,6 +46,7 @@ struct CronRun: Sendable, Identifiable {
         inputTokens = dto.usage?.inputTokens ?? 0
         outputTokens = dto.usage?.outputTokens ?? 0
         totalTokens = dto.usage?.totalTokens ?? 0
+        sessionKey = dto.sessionKey
         sessionId = dto.sessionId
 
         switch dto.status {

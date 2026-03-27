@@ -17,6 +17,7 @@ struct CronRunDTO: Decodable, Sendable {
     let usage: Usage?
     let delivered: Bool?
     let sessionId: String?
+    let sessionKey: String?
 
     struct Usage: Decodable, Sendable {
         let inputTokens: Int

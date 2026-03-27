@@ -55,6 +55,17 @@ struct CronJobToolRequest: Encodable, Sendable {
     }
 }
 
+struct SessionHistoryToolRequest: Encodable, Sendable {
+    let tool = "sessions_history"
+    let args: Args
+
+    struct Args: Encodable, Sendable {
+        let sessionKey: String
+        let limit: Int
+        let includeTools: Bool
+    }
+}
+
 struct CronRunsToolRequest: Encodable, Sendable {
     let tool = "cron"
     let args: Args

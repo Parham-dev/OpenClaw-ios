@@ -18,7 +18,8 @@ struct CronsTab: View {
                                         job: job,
                                         repository: detailRepository,
                                         onJobUpdated: { await vm.refresh() }
-                                    )
+                                    ),
+                                    repository: detailRepository
                                 ))
                                 .opacity(0)
                             )
@@ -79,7 +80,7 @@ struct CronJobRow: View {
 
                     Spacer(minLength: Spacing.xxs)
 
-                    StatusBadge(status: job.status)
+                    CronStatusBadge(status: job.status, style: .small)
                 }
 
                 // Schedule
@@ -124,54 +125,6 @@ struct CronJobRow: View {
         }
         .padding(.vertical, Spacing.xs)
         .accessibilityElement(children: .combine)
-    }
-}
-
-// MARK: - Status Badge
-
-private struct StatusBadge: View {
-    let status: CronJob.RunStatus
-
-    var body: some View {
-        HStack(spacing: Spacing.xxs) {
-            Image(systemName: icon)
-                .font(AppTypography.badgeIcon)
-            Text(label)
-                .font(AppTypography.micro)
-        }
-        .foregroundStyle(color)
-        .padding(.horizontal, Spacing.xs)
-        .padding(.vertical, 3)
-        .background(AppColors.tintedBackground(color), in: Capsule())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(label)
-    }
-
-    private var icon: String {
-        switch status {
-        case .succeeded: "checkmark"
-        case .failed:    "xmark"
-        case .unknown:   "questionmark"
-        case .never:     "minus"
-        }
-    }
-
-    private var label: String {
-        switch status {
-        case .succeeded: "OK"
-        case .failed:    "Failed"
-        case .unknown:   "Unknown"
-        case .never:     "Never run"
-        }
-    }
-
-    private var color: Color {
-        switch status {
-        case .succeeded: AppColors.success
-        case .failed:    AppColors.danger
-        case .unknown:   AppColors.warning
-        case .never:     AppColors.neutral
-        }
     }
 }
 
