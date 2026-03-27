@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CronsTab: View {
     let vm: CronSummaryViewModel
+    let detailRepository: CronDetailRepository
 
     private var jobs: [CronJob] { vm.data ?? [] }
 
@@ -12,8 +13,14 @@ struct CronsTab: View {
                     List(jobs) { job in
                         CronJobRow(job: job, onRun: { runJob(job) })
                             .background(
-                                NavigationLink("", destination: CronDetailPlaceholder(job: job))
-                                    .opacity(0)
+                                NavigationLink("", destination: CronDetailView(
+                                    vm: CronDetailViewModel(
+                                        job: job,
+                                        repository: detailRepository,
+                                        onJobUpdated: { await vm.refresh() }
+                                    )
+                                ))
+                                .opacity(0)
                             )
                     }
                     .listStyle(.insetGrouped)
@@ -166,20 +173,3 @@ private struct StatusBadge: View {
     }
 }
 
-// MARK: - Detail Placeholder
-
-struct CronDetailPlaceholder: View {
-    let job: CronJob
-
-    var body: some View {
-        ContentUnavailableView {
-            Label(job.name, systemImage: "clock.arrow.2.circlepath")
-                .font(AppTypography.screenTitle)
-        } description: {
-            Text("Run history and logs coming soon.")
-                .font(AppTypography.body)
-        }
-        .navigationTitle(job.name)
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}

@@ -68,9 +68,7 @@ struct GatewayClient: GatewayClientProtocol, Sendable {
             throw GatewayError.emptyContent
         }
 
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return try decoder.decode(Response.self, from: jsonData)
+        return try JSONDecoder().decode(Response.self, from: jsonData)
     }
 
     // MARK: - Private helpers

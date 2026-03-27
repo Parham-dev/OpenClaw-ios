@@ -4,6 +4,7 @@ import SwiftUI
 struct MainTabView: View {
     private let keychain: KeychainService
     private let client: GatewayClient
+    private let cronDetailRepo: CronDetailRepository
 
     @State private var cronVM: CronSummaryViewModel
 
@@ -11,6 +12,7 @@ struct MainTabView: View {
         self.keychain = keychain
         let client = GatewayClient(keychain: keychain)
         self.client = client
+        self.cronDetailRepo = RemoteCronDetailRepository(client: client)
         _cronVM = State(initialValue: CronSummaryViewModel(repository: RemoteCronRepository(client: client)))
     }
 
@@ -21,7 +23,7 @@ struct MainTabView: View {
             }
 
             Tab("Crons", systemImage: "clock.arrow.2.circlepath") {
-                CronsTab(vm: cronVM)
+                CronsTab(vm: cronVM, detailRepository: cronDetailRepo)
             }
 
             Tab("Pipelines", systemImage: "bolt.fill") {

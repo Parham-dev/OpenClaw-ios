@@ -14,8 +14,9 @@ struct CronJobDTO: Decodable, Sendable {
 
     struct Schedule: Decodable, Sendable {
         let kind: String
-        let expr: String
+        let expr: String?
         let tz: String?
+        let everyMs: Int?
     }
 
     struct State: Decodable, Sendable {
@@ -23,5 +24,6 @@ struct CronJobDTO: Decodable, Sendable {
         let lastRunAtMs: Int?
         let lastRunStatus: String?
         let consecutiveErrors: Int?
+        let lastError: String?
     }
 }

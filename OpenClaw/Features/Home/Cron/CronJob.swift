@@ -4,7 +4,7 @@ struct CronJob: Sendable, Identifiable {
     let id: String
     let name: String
     let enabled: Bool
-    let scheduleExpr: String
+    let scheduleExpr: String  // cron expr or "every Xm/Xs" for interval jobs
     let scheduleKind: String
     let timeZone: String?
     let nextRun: Date?
@@ -32,6 +32,11 @@ struct CronJob: Sendable, Identifiable {
 
     /// Human-readable schedule description from cron expression.
     var scheduleDescription: String {
+        // Interval-based jobs (kind: "every") already have readable expr
+        if scheduleKind == "every" {
+            return scheduleExpr.capitalized
+        }
+
         let parts = scheduleExpr.split(separator: " ")
         guard parts.count >= 5 else { return scheduleExpr }
 
@@ -90,12 +95,30 @@ struct CronJob: Sendable, Identifiable {
         return scheduleExpr
     }
 
+    let lastError: String?
+
     init(dto: CronJobDTO) {
         id = dto.id
         name = dto.name
         enabled = dto.enabled
-        scheduleExpr = dto.schedule.expr
         scheduleKind = dto.schedule.kind
+        lastError = dto.state.lastError
+
+        // "every" jobs have everyMs instead of expr
+        if let expr = dto.schedule.expr {
+            scheduleExpr = expr
+        } else if let ms = dto.schedule.everyMs {
+            let seconds = ms / 1000
+            if seconds >= 3600 {
+                scheduleExpr = "every \(seconds / 3600)h"
+            } else if seconds >= 60 {
+                scheduleExpr = "every \(seconds / 60)m"
+            } else {
+                scheduleExpr = "every \(seconds)s"
+            }
+        } else {
+            scheduleExpr = dto.schedule.kind
+        }
         timeZone = dto.schedule.tz
         nextRun = dto.state.nextRunAtMs.map { Date(timeIntervalSince1970: Double($0) / 1000) }
         lastRun = dto.state.lastRunAtMs.map { Date(timeIntervalSince1970: Double($0) / 1000) }
