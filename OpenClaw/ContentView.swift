@@ -3,7 +3,7 @@ import SwiftUI
 /// Root view: shows TokenSetupView until a Keychain token is present,
 /// then transitions to MainTabView with a smooth animation.
 struct ContentView: View {
-    private var keychain = KeychainService()
+    private let keychain: KeychainService
     @State private var isAuthenticated: Bool
 
     init() {

@@ -30,6 +30,14 @@ enum AppTypography {
     // MARK: - Gauge
     static let gaugePercent: Font = .system(size: 13, weight: .semibold, design: .rounded)
 
+    // MARK: - Icons
+    /// Large decorative icon (e.g. onboarding hero)
+    static let heroIcon: Font = .system(size: 64)
+    /// Action button icon (e.g. play button in list rows)
+    static let actionIcon: Font = .system(size: 32)
+    /// Small inline badge icon
+    static let badgeIcon: Font = .system(size: 10)
+
     // MARK: - Labels
     static let sectionLabel: Font = .caption
     static let sectionLabelTracking: CGFloat = 0.5

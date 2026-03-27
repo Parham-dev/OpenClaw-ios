@@ -1,3 +1,4 @@
+import MarkdownUI
 import SwiftUI
 
 struct CronDetailView: View {
@@ -45,7 +46,7 @@ struct CronDetailView: View {
                         Text(vm.job.nextRunFormatted)
                             .font(AppTypography.body)
                         if let nextRun = vm.job.nextRun {
-                            Text(Formatters.absoluteDate(nextRun))
+                            Text(Formatters.absoluteString(for: nextRun))
                                 .font(AppTypography.micro)
                                 .foregroundStyle(AppColors.neutral)
                         }
@@ -169,27 +170,6 @@ struct CronDetailView: View {
     }
 }
 
-// MARK: - Cached formatters
-
-private enum Formatters {
-    static let relative: RelativeDateTimeFormatter = {
-        let f = RelativeDateTimeFormatter()
-        f.unitsStyle = .short
-        return f
-    }()
-
-    static let absolute: DateFormatter = {
-        let f = DateFormatter()
-        f.dateStyle = .medium
-        f.timeStyle = .short
-        return f
-    }()
-
-    static func absoluteDate(_ date: Date) -> String {
-        absolute.string(from: date)
-    }
-}
-
 // MARK: - Run Row
 
 private struct RunRow: View {
@@ -270,17 +250,13 @@ private struct RunExpandedContent: View {
 
             if let summary = run.summary, !summary.isEmpty {
                 Divider()
-                Text(parsedMarkdown)
-                    .font(AppTypography.caption)
+                Markdown(summary)
+                    .markdownTheme(.openClaw)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding(.top, Spacing.xxs)
-    }
-
-    private var parsedMarkdown: AttributedString {
-        (try? AttributedString(markdown: run.summary ?? "", options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(run.summary ?? "")
     }
 }
 
@@ -293,6 +269,7 @@ private struct StatusDot: View {
         Circle()
             .fill(color)
             .frame(width: 10, height: 10)
+            .accessibilityLabel(accessibilityText)
     }
 
     private var color: Color {
@@ -301,6 +278,15 @@ private struct StatusDot: View {
         case .failed:    AppColors.danger
         case .unknown:   AppColors.warning
         case .never:     AppColors.neutral
+        }
+    }
+
+    private var accessibilityText: String {
+        switch status {
+        case .succeeded: "Succeeded"
+        case .failed:    "Failed"
+        case .unknown:   "Unknown"
+        case .never:     "Never run"
         }
     }
 }
@@ -320,6 +306,8 @@ private struct StatusBadgeLarge: View {
         .padding(.horizontal, Spacing.sm)
         .padding(.vertical, Spacing.xs)
         .background(AppColors.tintedBackground(color), in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label)
     }
 
     private var icon: String {

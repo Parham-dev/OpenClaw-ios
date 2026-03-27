@@ -25,16 +25,11 @@ struct CronRun: Sendable, Identifiable {
     }
 
     var runAtFormatted: String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .short
-        return formatter.localizedString(for: runAt, relativeTo: Date())
+        Formatters.relativeString(for: runAt)
     }
 
     var runAtAbsolute: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: runAt)
+        Formatters.absoluteString(for: runAt)
     }
 
     init(dto: CronRunDTO) {

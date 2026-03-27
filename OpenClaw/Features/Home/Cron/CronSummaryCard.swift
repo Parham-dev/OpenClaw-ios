@@ -100,9 +100,7 @@ struct CronSummaryCard: View {
 
     private var lastRunSubtitle: String {
         guard let lastRun = lastRan?.lastRun else { return "\u{2014}" }
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .short
-        return formatter.localizedString(for: lastRun, relativeTo: Date())
+        return Formatters.relativeString(for: lastRun)
     }
 }
 

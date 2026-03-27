@@ -18,16 +18,12 @@ struct CronJob: Sendable, Identifiable {
 
     var nextRunFormatted: String {
         guard let nextRun else { return "\u{2014}" }
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .short
-        return formatter.localizedString(for: nextRun, relativeTo: Date())
+        return Formatters.relativeString(for: nextRun)
     }
 
     var lastRunFormatted: String {
         guard let lastRun else { return "\u{2014}" }
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .short
-        return formatter.localizedString(for: lastRun, relativeTo: Date())
+        return Formatters.relativeString(for: lastRun)
     }
 
     /// Human-readable schedule description from cron expression.

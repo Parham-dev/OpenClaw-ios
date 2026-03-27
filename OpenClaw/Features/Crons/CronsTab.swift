@@ -115,7 +115,7 @@ struct CronJobRow: View {
                     onRun()
                 } label: {
                     Image(systemName: "play.circle.fill")
-                        .font(.system(size: 32))
+                        .font(AppTypography.actionIcon)
                         .foregroundStyle(AppColors.primaryAction)
                 }
                 .buttonStyle(.plain)
@@ -135,7 +135,7 @@ private struct StatusBadge: View {
     var body: some View {
         HStack(spacing: Spacing.xxs) {
             Image(systemName: icon)
-                .font(.system(size: 10))
+                .font(AppTypography.badgeIcon)
             Text(label)
                 .font(AppTypography.micro)
         }
@@ -143,6 +143,8 @@ private struct StatusBadge: View {
         .padding(.horizontal, Spacing.xs)
         .padding(.vertical, 3)
         .background(AppColors.tintedBackground(color), in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label)
     }
 
     private var icon: String {

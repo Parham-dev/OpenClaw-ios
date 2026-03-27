@@ -13,7 +13,7 @@ struct TokenSetupView: View {
             Spacer()
 
             Image(systemName: "key.fill")
-                .font(.system(size: 64))
+                .font(AppTypography.heroIcon)
                 .foregroundStyle(AppColors.warning)
 
             VStack(spacing: Spacing.xs) {
