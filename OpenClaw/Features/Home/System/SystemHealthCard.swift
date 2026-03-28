@@ -42,6 +42,17 @@ struct SystemHealthCard: View {
 
                         Spacer()
 
+                        Button {
+                            Haptics.shared.success()
+                            Task { await vm.refresh() }
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                                .font(AppTypography.caption)
+                                .foregroundStyle(AppColors.primaryAction)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Refresh health")
+
                         HStack(spacing: Spacing.xxs) {
                             Text("Load")
                                 .font(AppTypography.micro)

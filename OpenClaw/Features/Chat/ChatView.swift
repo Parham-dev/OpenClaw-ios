@@ -30,11 +30,9 @@ struct ChatView: View {
                     .padding(.vertical, Spacing.sm)
                 }
                 .scrollDismissesKeyboard(.interactively)
-                .onChange(of: vm.messages.count) {
+                .onChange(of: vm.messages.last?.content) {
                     if let last = vm.messages.last {
-                        withAnimation(.easeOut(duration: 0.2)) {
-                            proxy.scrollTo(last.id, anchor: .bottom)
-                        }
+                        proxy.scrollTo(last.id, anchor: .bottom)
                     }
                 }
             }
@@ -66,12 +64,19 @@ struct ChatView: View {
         .navigationTitle("Chat")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if vm.isStreaming {
-                ToolbarItem(placement: .primaryAction) {
+            ToolbarItem(placement: .primaryAction) {
+                if vm.isStreaming {
                     Button { vm.cancel() } label: {
                         Image(systemName: "stop.circle.fill")
                             .foregroundStyle(AppColors.danger)
                     }
+                } else {
+                    Button {
+                        vm.reloadHistory()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .disabled(vm.isLoadingHistory)
                 }
             }
         }
@@ -110,7 +115,7 @@ private struct ChatBubble: View {
                         .font(AppTypography.body)
                         .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, Spacing.xs)
-                        .background(AppColors.primaryAction, in: BubbleShape(isUser: true))
+                        .background(AppColors.primaryAction, in: RoundedRectangle(cornerRadius: AppRadius.card))
                         .foregroundStyle(.white)
                 } else {
                     if message.content.isEmpty && message.isStreaming {
@@ -129,7 +134,7 @@ private struct ChatBubble: View {
                             .padding(.vertical, Spacing.xs)
                             .background(
                                 AppColors.neutral.opacity(0.08),
-                                in: BubbleShape(isUser: false)
+                                in: RoundedRectangle(cornerRadius: AppRadius.card)
                             )
                     }
 
@@ -146,21 +151,11 @@ private struct ChatBubble: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: isUser ? .trailing : .leading)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(isUser ? "You" : "Agent"): \(message.content)")
 
             if !isUser { Spacer(minLength: Spacing.xxl) }
         }
     }
 }
 
-// MARK: - Bubble Shape
-
-private struct BubbleShape: Shape {
-    let isUser: Bool
-
-    func path(in rect: CGRect) -> Path {
-        let radius: CGFloat = 16
-        let smallRadius: CGFloat = 4
-        return RoundedRectangle(cornerRadius: radius)
-            .path(in: rect)
-    }
-}

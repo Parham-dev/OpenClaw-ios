@@ -127,4 +127,5 @@ struct QuickCommand: Identifiable, Sendable {
     ]
 
     static let visibleCount = 6
+    static let gridColumns = Array(repeating: GridItem(.flexible(), spacing: Spacing.xs), count: 3)
 }

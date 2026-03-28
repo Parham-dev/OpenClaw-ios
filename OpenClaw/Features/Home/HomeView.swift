@@ -29,7 +29,7 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: Spacing.md) {
                     SystemHealthCard(vm: systemVM)
-                    CommandsCard(vm: commandsVM)
+                    CommandsCard(vm: commandsVM, client: client)
                     CronSummaryCard(vm: cronVM)
 
                     TokenUsageCard(vm: tokenUsageVM, detailRepository: cronDetailRepository)

@@ -65,8 +65,9 @@ Sub-grid visual details (2pt padding, 6pt dots, 8pt indicator circles) are accep
 - `CommandButton` — reusable quick action button with icon, label, loading state.
 - `ElapsedTimer` — live-updating elapsed time counter for long-running agent calls.
 - `ParagraphRow` — paragraph-level markdown viewer with annotation support. Reused for both memory and skill markdown files.
-- `CommentSheet` — unified comment sheet with two modes: `.paragraph` (inline annotation) and `.page` (whole-file instruction to agent). Both use `CommentInputBar`.
-- `CommentInputBar` — reusable chat-style input bar (multiline text field + send button). Used across all comment/instruction UIs.
+- `CommentSheet` — unified comment sheet with three modes: `.paragraph` (inline annotation), `.page` (whole-file instruction), `.skill` (skill-level instruction — agent reads `create-skill` first). All use `CommentInputBar`.
+- `CommentInputBar` — reusable chat-style input bar (multiline text field + send button). Used across comment sheets and chat.
+- `QuickCommand.gridColumns` — shared 3-column grid layout constant used by `CommandsCard` and `CommandsDetailView`.
 
 ### Local storage
 
@@ -97,8 +98,11 @@ Sub-grid visual details (2pt padding, 6pt dots, 8pt indicator circles) are accep
 - **`@Bindable` for passed-in VMs**: When a view receives an `@Observable` VM from outside and needs bindings (`$vm.property`), use `@Bindable var vm` — not `@State`.
 - **Exit code checking**: All `stats/exec` calls go through `RemoteMemoryRepository.exec()` helper which throws `MemoryError.commandFailed` on non-zero exit codes.
 - **Streaming chat**: `GatewayClient.streamChat()` returns `AsyncThrowingStream<String, Error>`. Uses SSE via `URLSession.bytes(for:)`, parses `data:` lines, decodes `ChatStreamChunk` deltas, yields text tokens. Stops on `[DONE]`. Uses `longRunningSession` (15min timeout). Send only the user message — session key manages history server-side. Empty system prompt is skipped.
-- **Chat history**: Load via `sessions_history` with `includeTools: false` and `limit: 50` on appear. Only user + assistant text messages (no tool calls). Loaded once per chat view lifecycle.
+- **Chat history**: Load via `sessions_history` with `includeTools: false` and `limit: 50` on appear. Only user + assistant text messages (no tool calls). Loaded once per chat view lifecycle. Reload button in toolbar re-fetches latest.
+- **Chat safety**: Use message UUID for index lookups during streaming (never captured `Int` index — array may change). `hasPendingSend` flag prevents history reload from overwriting in-flight messages.
 - **Keyboard UX**: `.scrollDismissesKeyboard(.interactively)` on chat scroll view — keyboard follows drag gesture.
+- **Admin data commands**: `models-status`, `agents-list`, `channels-list` return JSON in stdout. Parse via `JSONDecoder` on the stdout string. `AdminViewModel` fetches all three in parallel using `async let` with `nonisolated` fetch functions for true concurrency.
+- **Provider display**: Extract provider from model string (`anthropic/claude-sonnet-4-6` → "Anthropic"). `ModelRow` in `ModelsSection` shows provider label alongside `ModelPill`.
 
 ## Prompt Engineering
 
@@ -134,3 +138,4 @@ All prompts sent to the agent follow these principles:
 - **Streaming SSE format**: `stream: true` on `/v1/chat/completions` → `Content-Type: text/event-stream`. Each line: `data: <json>\n\n`. Final: `data: [DONE]\n\n`. Chunk JSON: standard OpenAI delta format (`choices[0].delta.content`). Tool use is invisible — agent handles tools server-side, stream only surfaces final text output.
 - **Chat session continuity**: With `x-openclaw-session-key`, send only the new user message — don't send message history (server manages it). Sending old messages causes duplication. Skip system prompt for chat (empty string → omitted from request body).
 - **Stream cancellation**: Dropping the connection does NOT cancel the agent — it runs to completion server-side. Cancel is client-side only (discard stream).
+- **Admin exec commands**: `models-status`, `agents-list`, `channels-list` all return JSON in `stdout`. Parse with `JSONDecoder` after extracting `response.stdout?.data(using: .utf8)`. `agents-list` returns an array, the others return objects. `channels-list` has nested `chat` (channel dict), `usage.providers` (quota bars). No args needed for any of them.

@@ -1,16 +1,11 @@
-import MarkdownUI
 import SwiftUI
 
 struct CommandsCard: View {
     @State var vm: CommandsViewModel
-    @State private var isExpanded = false
+    var client: GatewayClientProtocol?
     @State private var commandToConfirm: QuickCommand?
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: Spacing.xs), count: 3)
-
-    private var visibleCommands: [QuickCommand] {
-        isExpanded ? QuickCommand.all : Array(QuickCommand.all.prefix(QuickCommand.visibleCount))
-    }
+    private let columns = QuickCommand.gridColumns
 
     var body: some View {
         CardContainer(
@@ -21,7 +16,7 @@ struct CommandsCard: View {
         ) {
             VStack(spacing: Spacing.sm) {
                 LazyVGrid(columns: columns, spacing: Spacing.xs) {
-                    ForEach(visibleCommands) { cmd in
+                    ForEach(Array(QuickCommand.all.prefix(QuickCommand.visibleCount))) { cmd in
                         CommandButton(
                             command: cmd,
                             isRunning: vm.isCommandRunning(cmd.id)
@@ -31,17 +26,15 @@ struct CommandsCard: View {
                     }
                 }
 
-                // Show More / Show Less
-                if QuickCommand.all.count > QuickCommand.visibleCount {
-                    Button {
-                        withAnimation(.snappy(duration: 0.3)) {
-                            isExpanded.toggle()
-                        }
+                // Detail navigation
+                if let client {
+                    NavigationLink {
+                        CommandsDetailView(commandsVM: vm, client: client)
                     } label: {
                         HStack(spacing: Spacing.xxs) {
-                            Text(isExpanded ? "Show Less" : "Show More")
+                            Text("View Details")
                                 .font(AppTypography.caption)
-                            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            Image(systemName: "chevron.right")
                                 .font(AppTypography.micro)
                         }
                         .foregroundStyle(AppColors.primaryAction)
@@ -70,4 +63,3 @@ struct CommandsCard: View {
         }
     }
 }
-

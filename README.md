@@ -17,7 +17,7 @@ Built with SwiftUI and Swift Concurrency. One dependency: [MarkdownUI](https://g
 ### Home Dashboard Cards
 
 - **System Health** — CPU, RAM, Disk ring gauges with auto-polling every 15s (stops when not on Home tab). Uptime + load average.
-- **Commands** — 6 quick action buttons (Doctor, Tail Logs, Security Audit, Backup, etc.) + "Show More" for 6 more. Each confirms before running, shows result in a modal with copy + "Investigate with AI" button. The agent analyses output and fixes issues if possible.
+- **Commands** — 6 quick action buttons (Doctor, Tail Logs, Security Audit, Backup, etc.). Each confirms before running, shows result in a modal with copy + "Investigate with AI" button. Tap "View Details" for full grid of all 12 commands + admin panels (Models & Config, Channels & Provider Usage). Manual refresh button on System Health card.
 - **Cron Summary** — Last run status + next upcoming run at a glance.
 - **Token Usage** — Segmented control (Today/Yesterday/7 Days). Total tokens, cost, proportional bar (input/output/cache read/cache write), request counts (total/thinking/tool), collapsible per-model breakdown. Tap "View Details" for deep-dive analytics with donut chart, cache efficiency gauge, cost-by-model bar chart, expanded per-model breakdowns, and per-pipeline token attribution.
 - **Outreach Stats** — 6-cell grid with leads, channels, conversions.
@@ -48,6 +48,13 @@ Full step-by-step trace of agent execution with metadata pills (model, provider,
 - **Tool results** — stdout/stderr output
 - **Text responses** — final agent output (markdown)
 
+### Commands & Admin Detail
+
+- **Full command grid** — all 12 action commands in a 3-column grid with confirmation alerts
+- **Models & Config** — default model with provider, fallbacks, image model, agent info (emoji + name), collapsible aliases list. Data from `models-status` + `agents-list` exec commands.
+- **Channels** — connected channel status (Telegram, WhatsApp, etc.) with green/grey dots. Provider usage with quota progress bars and warning colors at 70%/90% thresholds. Data from `channels-list` exec command.
+- All three admin sections load in parallel on appear.
+
 ### Mem & Skills Tab
 
 - **Memory segment** — workspace files grouped by type (Memory Files, Daily Logs, Reference). Markdown rendered paragraph by paragraph. Add Figma-style comments on paragraphs, submit to the AI agent to perform edits. Page-level comment button (💬) to instruct the agent about the whole file.
@@ -66,10 +73,10 @@ Accessible from the Home tab's left nav bar icon. Full streaming chat with the o
 
 - **SSE streaming** — real-time token-by-token response via `stream: true` on `/v1/chat/completions`
 - **Session-bound** — uses `x-openclaw-session-key: agent:orchestrator:main`, agent has full conversation history server-side
-- **History on open** — loads last 50 messages from session history (user + assistant text only, no tool calls)
-- **Chat bubbles** — user messages (blue, right-aligned), assistant responses (markdown-rendered, left-aligned)
+- **History on open** — loads last 50 messages from session history (user + assistant text only, no tool calls). Reload button in toolbar to fetch latest.
+- **Chat bubbles** — user messages (blue, right-aligned), assistant responses (markdown-rendered, left-aligned). Auto-scrolls during streaming.
 - **Streaming indicator** — "Thinking..." spinner while waiting, green dot + "Streaming" while receiving
-- **Stop button** — cancel stream mid-response (agent keeps running server-side)
+- **Stop button** — cancel stream mid-response (agent keeps running server-side). Shown in place of reload button during streaming.
 - **Keyboard** — interactive scroll-to-dismiss, reuses `CommentInputBar`
 
 ## Getting Started
@@ -102,12 +109,13 @@ All requests go to `https://api.appwebdev.co.uk` with `Authorization: Bearer <to
 | `cron` | `run` | `jobId` | Manual trigger |
 | `cron` | `update` | `jobId`, `patch: {enabled}` | Toggle enabled/disabled |
 | `gateway` | `restart` | — | Restart gateway process |
+| `sessions_list` | — | `limit` | List all sessions (response wrapped: `{count, sessions}`) |
 | `sessions_history` | — | `sessionKey`, `limit`, `includeTools` | Agent execution trace |
 | `memory_get` | — | `path`, `sessionKey` | Read workspace file content |
 
 ### Stats Exec Commands (via /stats/exec)
 
-Predefined server-side allowlist: `doctor`, `status`, `logs`, `security-audit`, `backup`, `channels-status`, `config-validate`, `memory-reindex`, `session-cleanup`, `plugin-update`, `memory-list`, `skills-list`, `skill-files` (takes skill name), `skill-read` (takes "skillId relativePath").
+Predefined server-side allowlist: `doctor`, `status`, `logs`, `security-audit`, `backup`, `channels-status`, `config-validate`, `memory-reindex`, `session-cleanup`, `plugin-update`, `memory-list`, `skills-list`, `skill-files` (takes skill name), `skill-read` (takes "skillId relativePath"), `models-status`, `agents-list`, `channels-list`.
 
 ### Gateway Config Required
 

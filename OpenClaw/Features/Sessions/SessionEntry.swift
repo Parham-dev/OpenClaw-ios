@@ -2,7 +2,6 @@ import Foundation
 
 struct SessionEntry: Sendable, Identifiable {
     let id: String
-    let key: String
     let kind: Kind
     let displayName: String
     let model: String?
@@ -42,7 +41,6 @@ struct SessionEntry: Sendable, Identifiable {
 
     init(dto: SessionListDTO) {
         id = dto.key
-        key = dto.key
         displayName = dto.displayName ?? dto.label ?? dto.key
         model = dto.model
         totalTokens = dto.totalTokens ?? 0
@@ -58,10 +56,10 @@ struct SessionEntry: Sendable, Identifiable {
         default:        status = .unknown
         }
 
-        if key == "agent:orchestrator:main" {
+        if id == "agent:orchestrator:main" {
             kind = .main
-        } else if key.hasPrefix("agent:orchestrator:cron:") && !key.contains(":run:") {
-            let jobId = String(key.dropFirst("agent:orchestrator:cron:".count))
+        } else if id.hasPrefix("agent:orchestrator:cron:") && !id.contains(":run:") {
+            let jobId = String(id.dropFirst("agent:orchestrator:cron:".count))
             kind = .cron(jobId: jobId)
         } else {
             kind = .subagent

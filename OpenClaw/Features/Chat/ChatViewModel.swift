@@ -13,6 +13,7 @@ final class ChatViewModel {
     private let sessionKey = "agent:orchestrator:main"
     private var streamTask: Task<Void, Never>?
     private var historyLoaded = false
+    private var hasPendingSend = false
 
     init(client: GatewayClientProtocol) {
         self.client = client
@@ -50,12 +51,10 @@ final class ChatViewModel {
                 }
             }
 
-            // Only set if no new messages were sent while loading
-            if messages.isEmpty {
+            if !hasPendingSend {
                 messages = loaded
             }
         } catch {
-            // Non-fatal — chat still works without history
             self.error = error
         }
         isLoadingHistory = false
@@ -64,12 +63,14 @@ final class ChatViewModel {
     // MARK: - Send
 
     func send(_ text: String) {
+        hasPendingSend = true
+
         let userMessage = ChatMessage(role: .user, content: text)
         messages.append(userMessage)
 
         let assistantMessage = ChatMessage(role: .assistant, content: "", isStreaming: true)
         messages.append(assistantMessage)
-        let assistantIndex = messages.count - 1
+        let assistantId = assistantMessage.id
 
         isStreaming = true
         error = nil
@@ -78,22 +79,37 @@ final class ChatViewModel {
             do {
                 let stream = client.streamChat(message: text, sessionKey: sessionKey)
                 for try await delta in stream {
-                    messages[assistantIndex].content += delta
+                    guard let idx = messages.firstIndex(where: { $0.id == assistantId }) else { break }
+                    messages[idx].content += delta
                 }
-                messages[assistantIndex].isStreaming = false
+                if let idx = messages.firstIndex(where: { $0.id == assistantId }) {
+                    messages[idx].isStreaming = false
+                }
                 Haptics.shared.success()
             } catch is CancellationError {
-                messages[assistantIndex].isStreaming = false
+                if let idx = messages.firstIndex(where: { $0.id == assistantId }) {
+                    messages[idx].isStreaming = false
+                }
             } catch {
-                messages[assistantIndex].isStreaming = false
-                if messages[assistantIndex].content.isEmpty {
-                    messages.remove(at: assistantIndex)
+                if let idx = messages.firstIndex(where: { $0.id == assistantId }) {
+                    messages[idx].isStreaming = false
+                    if messages[idx].content.isEmpty {
+                        messages.remove(at: idx)
+                    }
                 }
                 self.error = error
                 Haptics.shared.error()
             }
             isStreaming = false
+            hasPendingSend = false
         }
+    }
+
+    func reloadHistory() {
+        historyLoaded = false
+        hasPendingSend = false
+        messages = []
+        Task { await loadHistory() }
     }
 
     func cancel() {

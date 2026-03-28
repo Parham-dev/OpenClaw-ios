@@ -75,7 +75,7 @@ struct SessionsView: View {
             List(vm.subagents) { session in
                 NavigationLink {
                     SessionTraceView(
-                        sessionKey: session.key,
+                        sessionKey: session.id,
                         title: session.displayName,
                         subtitle: session.updatedAtFormatted,
                         repository: repository
@@ -111,7 +111,7 @@ private struct MainSessionCard: View {
     var body: some View {
         NavigationLink {
             SessionTraceView(
-                sessionKey: session.key,
+                sessionKey: session.id,
                 title: "Main Session",
                 subtitle: session.startedAtFormatted,
                 newestFirst: true,
