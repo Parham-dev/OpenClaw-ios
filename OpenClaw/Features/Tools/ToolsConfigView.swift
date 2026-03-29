@@ -128,7 +128,7 @@ struct ToolsConfigView: View {
                             if let detail = vm.mcpDetails[server.id] {
                                 Text("\(detail.tools.count) tools")
                                     .font(AppTypography.micro)
-                                    .foregroundStyle(statusColor(detail))
+                                    .foregroundStyle(detail.statusColor)
                             }
                         }
                     }
@@ -137,11 +137,4 @@ struct ToolsConfigView: View {
         }
     }
 
-    private func statusColor(_ detail: McpServerDetail) -> Color {
-        switch detail.status {
-        case "ok": AppColors.success
-        case "timeout": AppColors.warning
-        default: AppColors.danger
-        }
-    }
 }

@@ -84,4 +84,12 @@ struct McpServerDetail: Sendable {
     let error: String?
 
     var isOk: Bool { status == "ok" }
+
+    var statusColor: Color {
+        switch status {
+        case "ok": AppColors.success
+        case "timeout": AppColors.warning
+        default: AppColors.danger
+        }
+    }
 }

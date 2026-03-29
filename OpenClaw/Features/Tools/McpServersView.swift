@@ -47,7 +47,7 @@ struct McpServersView: View {
                 LabeledContent("Status") {
                     Text(detail.status)
                         .font(AppTypography.captionBold)
-                        .foregroundStyle(statusColor(detail))
+                        .foregroundStyle(detail.statusColor)
                 }
 
                 // Tools
@@ -89,11 +89,4 @@ struct McpServersView: View {
         }
     }
 
-    private func statusColor(_ detail: McpServerDetail) -> Color {
-        switch detail.status {
-        case "ok": AppColors.success
-        case "timeout": AppColors.warning
-        default: AppColors.danger
-        }
-    }
 }

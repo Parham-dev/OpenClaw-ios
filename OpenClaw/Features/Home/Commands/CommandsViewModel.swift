@@ -12,10 +12,12 @@ final class CommandsViewModel {
 
     private let client: GatewayClientProtocol
     private let cronRepository: CronRepository?
+    private let cronDetailRepository: CronDetailRepository?
 
-    init(client: GatewayClientProtocol, cronRepository: CronRepository? = nil) {
+    init(client: GatewayClientProtocol, cronRepository: CronRepository? = nil, cronDetailRepository: CronDetailRepository? = nil) {
         self.client = client
         self.cronRepository = cronRepository
+        self.cronDetailRepository = cronDetailRepository
     }
 
     func execute(_ command: QuickCommand) async {
@@ -69,13 +71,13 @@ final class CommandsViewModel {
 
     private func pauseAllCrons() async throws -> String {
         guard let repo = cronRepository else { return "Cron repository not available." }
+        guard let detailRepo = cronDetailRepository else { return "Cron detail repository not available." }
         let jobs = try await repo.fetchJobs()
         let enabledJobs = jobs.filter(\.enabled)
         guard !enabledJobs.isEmpty else { return "No enabled cron jobs to pause." }
 
         var paused = 0
         var failed = 0
-        let detailRepo = RemoteCronDetailRepository(client: client)
         for job in enabledJobs {
             do {
                 try await detailRepo.setEnabled(jobId: job.id, enabled: false)
@@ -140,7 +142,3 @@ struct CommandResult: Identifiable {
     let output: String
 }
 
-struct GatewayCommandResponse: Decodable {
-    let message: String?
-    let text: String?
-}

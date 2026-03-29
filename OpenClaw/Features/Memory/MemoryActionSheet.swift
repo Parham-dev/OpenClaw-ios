@@ -126,16 +126,10 @@ struct MemoryActionSheet: View {
         result = nil
 
         let prompt = action.prompt()
-        let request = ChatCompletionRequest(system: prompt.system, user: prompt.user)
+        await vm.runMaintenanceAction(prompt: prompt)
 
-        do {
-            let response = try await vm.client.chatCompletion(request, sessionKey: SessionKeys.main)
-            result = response.text ?? "Agent returned no content."
-            Haptics.shared.success()
-        } catch {
-            self.error = error
-            Haptics.shared.error()
-        }
+        result = vm.maintenanceResult
+        error = vm.maintenanceError
         isRunning = false
     }
 }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     let keychain: KeychainService
+    var client: GatewayClientProtocol?
 
     @State private var showTokenSetup = false
     @State private var isTesting = false
@@ -89,10 +90,10 @@ struct SettingsView: View {
     private func runConnectionTest() {
         isTesting = true
         testResult = nil
-        let client = GatewayClient(keychain: keychain)
+        let testClient = client ?? GatewayClient(keychain: keychain)
         Task {
             do {
-                let dto: SystemStatsDTO = try await client.stats("stats/system")
+                let dto: SystemStatsDTO = try await testClient.stats("stats/system")
                 testResult = TestResult(
                     isSuccess: true,
                     message: "OK \u{2014} CPU \(String(format: "%.1f", dto.cpuPercent))%  RAM \(dto.ramPercent)%"

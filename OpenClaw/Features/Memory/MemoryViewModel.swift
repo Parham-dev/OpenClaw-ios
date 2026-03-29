@@ -27,7 +27,7 @@ final class MemoryViewModel {
     var submitError: Error?
 
     private let repository: MemoryRepository
-    let client: GatewayClientProtocol
+    private let client: GatewayClientProtocol
 
     init(repository: MemoryRepository, client: GatewayClientProtocol) {
         self.repository = repository
@@ -181,6 +181,30 @@ final class MemoryViewModel {
     func clearPageComment() {
         pageCommentResult = nil
         pageCommentError = nil
+    }
+
+    // MARK: - Maintenance Actions
+
+    var maintenanceResult: String?
+    var isRunningMaintenance = false
+    var maintenanceError: Error?
+
+    func runMaintenanceAction(prompt: (system: String, user: String)) async {
+        isRunningMaintenance = true
+        maintenanceError = nil
+        maintenanceResult = nil
+
+        let request = ChatCompletionRequest(system: prompt.system, user: prompt.user)
+
+        do {
+            let response = try await client.chatCompletion(request, sessionKey: SessionKeys.main)
+            maintenanceResult = response.text ?? "Agent returned no content."
+            Haptics.shared.success()
+        } catch {
+            maintenanceError = error
+            Haptics.shared.error()
+        }
+        isRunningMaintenance = false
     }
 
     // MARK: - Submit Edits

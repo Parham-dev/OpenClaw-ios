@@ -72,3 +72,11 @@ enum GatewayError: LocalizedError {
         }
     }
 }
+
+// MARK: - Gateway Command Response
+
+/// Response from a gateway tool command (e.g. restart).
+struct GatewayCommandResponse: Decodable, Sendable {
+    let message: String?
+    let text: String?
+}

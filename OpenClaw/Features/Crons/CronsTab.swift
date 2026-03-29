@@ -8,6 +8,7 @@ struct CronsTab: View {
     @State private var selectedTab: CronTab = .jobs
     @State private var historyVM: CronHistoryViewModel?
     @State private var jobToRun: CronJob?
+    @State private var triggerError: Error?
 
     private var jobs: [CronJob] { vm.data ?? [] }
 
@@ -67,6 +68,16 @@ struct CronsTab: View {
                 if let job = jobToRun {
                     Text("This will trigger \"\(job.name)\" immediately outside its normal schedule.")
                 }
+            }
+        }
+        .alert("Run Failed", isPresented: Binding(
+            get: { triggerError != nil },
+            set: { if !$0 { triggerError = nil } }
+        )) {
+            Button("OK") { triggerError = nil }
+        } message: {
+            if let err = triggerError {
+                Text(err.localizedDescription)
             }
         }
         .task { vm.start() }
@@ -205,6 +216,7 @@ struct CronsTab: View {
             Haptics.shared.success()
             await vm.refresh()
         } catch {
+            triggerError = error
             Haptics.shared.error()
         }
     }
