@@ -12,6 +12,12 @@ struct CommandOutputView: View {
             LogOutputView(output: output)
         case "security-audit":
             SecurityAuditView(output: output)
+        case "doctor":
+            DoctorOutputView(output: output)
+        case "gateway-status":
+            StatusOutputView(output: output)
+        case "channel-status":
+            ChannelStatusView(output: output)
 
         default:
             // Raw fallback

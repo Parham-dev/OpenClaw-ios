@@ -43,13 +43,13 @@ struct QuickCommand: Identifiable, Sendable {
         ),
         // Row 2 — visible by default
         QuickCommand(
-            id: "pause-all-crons",
-            name: "Pause Crons",
-            icon: "pause.circle.fill",
-            iconColor: AppColors.danger,
-            confirmMessage: "Disable ALL cron jobs? No scheduled tasks will run until re-enabled.",
-            toolName: "pause-all-crons",
-            args: [:]
+            id: "gateway-status",
+            name: "Status",
+            icon: "heart.circle.fill",
+            iconColor: AppColors.success,
+            confirmMessage: "Check gateway and channel status?",
+            toolName: "stats-exec",
+            args: ["command": "status"]
         ),
         QuickCommand(
             id: "security-audit",
@@ -69,15 +69,15 @@ struct QuickCommand: Identifiable, Sendable {
             toolName: "stats-exec",
             args: ["command": "backup"]
         ),
-        // Row 3+ — behind "Show More"
+        // Row 3+ — behind "View Details"
         QuickCommand(
-            id: "gateway-status",
-            name: "Status",
-            icon: "heart.circle.fill",
-            iconColor: AppColors.success,
-            confirmMessage: "Check gateway and channel status?",
-            toolName: "stats-exec",
-            args: ["command": "status"]
+            id: "pause-all-crons",
+            name: "Pause Crons",
+            icon: "pause.circle.fill",
+            iconColor: AppColors.danger,
+            confirmMessage: "Disable ALL cron jobs? No scheduled tasks will run until re-enabled.",
+            toolName: "pause-all-crons",
+            args: [:]
         ),
         QuickCommand(
             id: "channel-status",
