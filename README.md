@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="OpenClaw/Assets.xcassets/openclaw.imageset/openclaw-color.png" width="120" alt="OpenClaw iOS">
+  <img src="resources/app-icon.PNG" width="120" alt="OpenClaw iOS">
 </p>
 
 <h1 align="center">OpenClaw for iOS</h1>
@@ -22,7 +22,7 @@
 
 ## The Story
 
-Hi, I'm **Parham** — Manchester-based software developer with 12+ years of experience. Technical Lead at [Kitman Labs](https://www.kitmanlabs.com) by day, OpenClaw and AI enthusiast by night.
+Hi, I'm **Parham** — Manchester-based software developer with 12+ years of experience. Technical Lead at [Kitman Labs](https://www.kitmanlabs.com) by day, OpenClaw and AI enthusiast by night. Manchester, UK
 
 I've been deep in AI for the last three years, and [OpenClaw](https://github.com/nichochar/openclaw) genuinely impressed me — it was the missing piece for automating my workflows and being dramatically more productive. Here's one of my earlier cron schedules in Google Calendar (it's much crazier now):
 
@@ -43,12 +43,12 @@ But as a technical person myself, I found the onboarding, setup, and control UI 
 ## Demo
 
 <p align="center">
-  <a href="resources/ScreenRecording_03-30-2026 14-22-00_1.MP4">
+  <a href="https://drive.google.com/file/d/1dC7TLsp8c-fUoj3i7hPodQ-uzzt8ngfw/view?usp=sharing">
     <img src="resources/IMG_2548.PNG" width="250" alt="Watch Demo">
   </a>
 </p>
 
-<p align="center"><em>3-minute walkthrough of the app in action</em></p>
+<p align="center"><a href="https://drive.google.com/file/d/1dC7TLsp8c-fUoj3i7hPodQ-uzzt8ngfw/view?usp=sharing">Watch the 3-minute demo on Google Drive</a></p>
 
 ---
 
@@ -102,22 +102,58 @@ Models & Config (provider icons, fallbacks, aliases). Channels (status dots, pro
 
 ## Getting Started
 
+### 1. Set up the Stats Server skill on OpenClaw
+
+The app communicates with your gateway through a **stats server skill** that needs to be installed first. This skill exposes the `/stats/*` endpoints and `/stats/exec` commands that the app depends on.
+
+```bash
+# In your OpenClaw workspace, install the stats server skill
+openclaw skills add ios-stats-server
+
+# Or manually create the skill in your skills folder:
+# ~/.openclaw/workspace/<agent>/skills/ios-stats-server/
+```
+
+The skill provides:
+- `GET /stats/system` — system health (CPU, RAM, disk)
+- `GET /stats/tokens` — token usage analytics
+- `POST /stats/exec` — allowlisted command execution (doctor, logs, status, etc.)
+- All the admin commands (models-status, channels-list, tools-list, etc.)
+
+> Without this skill, only `/tools/invoke` and `/v1/chat/completions` endpoints will work. The dashboard cards and commands will show errors.
+
+### 2. Configure the gateway
+
+Add these settings to your `openclaw.json`:
+
+```json
+{
+  "tools": {
+    "sessions": { "visibility": "all" },
+    "profile": "full",
+    "allow": ["exec", "cron", "gateway", "sessions_list", "sessions_history", "memory_get"]
+  },
+  "gateway": {
+    "http": {
+      "endpoints": {
+        "chatCompletions": { "enabled": true }
+      }
+    }
+  }
+}
+```
+
+### 3. Build and run the app
+
 1. **Clone** this repo
 2. **Open** `OpenClaw.xcodeproj` in Xcode 16+
 3. **Build and run** on a simulator or device (iOS 17+)
-4. **On first launch**, enter your gateway URL and Bearer token
+4. **On first launch**, enter your gateway URL (e.g. `https://your-server.com:18789`) and Bearer token
 5. The dashboard loads automatically — pull down to refresh
 
-### Prerequisites
+### Security
 
-- An [OpenClaw](https://github.com/nichochar/openclaw) gateway running and accessible
-- A Bearer token for authentication
-- Gateway config:
-  ```
-  tools.sessions.visibility = "all"
-  tools.profile = "full"
-  gateway.http.endpoints.chatCompletions.enabled = true
-  ```
+All communication is **direct between your phone and your gateway** — no third-party servers, no telemetry, no data collection. Your Bearer token is stored in the iOS Keychain (never in UserDefaults or iCloud). The app makes authenticated HTTPS requests only to the gateway URL you configure. No one else sees your data.
 
 ---
 
