@@ -153,7 +153,7 @@ struct SessionTraceView: View {
 private struct SessionRepositoryAdapter: SessionRepository {
     let cronRepo: CronDetailRepository
 
-    func fetchSessions(limit: Int) async throws -> [SessionEntry] { [] }
+    @MainActor func fetchSessions(limit: Int) async throws -> [SessionEntry] { [] }
 
     func fetchTrace(sessionKey: String, limit: Int) async throws -> SessionTrace {
         try await cronRepo.fetchSessionTrace(sessionKey: sessionKey, limit: limit)

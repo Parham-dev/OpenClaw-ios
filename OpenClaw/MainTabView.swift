@@ -22,7 +22,7 @@ struct MainTabView: View {
         self.sessionRepo = sessionRepo
         _cronVM = State(initialValue: CronSummaryViewModel(repository: RemoteCronRepository(client: client)))
         _memoryVM = State(initialValue: MemoryViewModel(
-            repository: RemoteMemoryRepository(client: client, sessionKey: SessionKeys.main),
+            repository: RemoteMemoryRepository(client: client, sessionKey: SessionKeys.main, workspaceRoot: AppConstants.workspaceRoot),
             client: client
         ))
         _sessionsVM = State(initialValue: SessionsViewModel(repository: sessionRepo))

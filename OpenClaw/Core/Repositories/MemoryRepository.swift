@@ -14,19 +14,21 @@ protocol MemoryRepository: Sendable {
 final class RemoteMemoryRepository: MemoryRepository {
     private let client: GatewayClientProtocol
     private let sessionKey: String
+    private let workspaceRoot: String
 
-    init(client: GatewayClientProtocol, sessionKey: String) {
+    init(client: GatewayClientProtocol, sessionKey: String, workspaceRoot: String) {
         self.client = client
         self.sessionKey = sessionKey
+        self.workspaceRoot = workspaceRoot
     }
 
     func listFiles() async throws -> [MemoryFile] {
-        let response = try await exec("memory-list")
+        let response = try await exec("memory-list", args: workspaceRoot)
         return MemoryFile.parse(stdout: response.stdout ?? "")
     }
 
     func listSkills() async throws -> [SkillFile] {
-        let response = try await exec("skills-list")
+        let response = try await exec("skills-list", args: workspaceRoot)
         return SkillFile.parse(stdout: response.stdout ?? "")
     }
 

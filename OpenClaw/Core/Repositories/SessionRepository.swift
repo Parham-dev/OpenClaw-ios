@@ -18,32 +18,11 @@ final class RemoteSessionRepository: SessionRepository {
     @MainActor
     func fetchSessions(limit: Int) async throws -> [SessionEntry] {
         let body = SessionListToolRequest(args: .init(limit: limit))
-        do {
-            let response: SessionListResponseDTO = try await client.invoke(body)
-            logger.debug("fetchSessions OK — \(response.sessions.count) sessions")
-
-            // Debug: log account config used for session classification
-            let account = AppConstants.account
-            logger.debug("Active account: \(account?.name ?? "nil"), agentId: \(account?.agentId ?? "nil"), sessionKeyMain: \(SessionKeys.main)")
-
-            let entries = response.sessions.map { dto in
-                let entry = SessionEntry(dto: dto)
-                logger.debug("Session \(dto.key) → kind: \(String(describing: entry.kind)), model: \(dto.model ?? "nil")")
-                return entry
-            }
-
-            let mainCount = entries.filter { if case .main = $0.kind { return true } else { return false } }.count
-            let subCount = entries.filter { if case .subagent = $0.kind { return true } else { return false } }.count
-            logger.debug("Classification: \(mainCount) main, \(subCount) subagent, \(entries.count) total")
-
-            return entries.sorted { ($0.updatedAt ?? .distantPast) > ($1.updatedAt ?? .distantPast) }
-        } catch {
-            logger.error("fetchSessions FAILED — \(error.localizedDescription)")
-            if let gwError = error as? GatewayError {
-                logger.error("GatewayError: \(gwError.errorDescription ?? "unknown")")
-            }
-            throw error
-        }
+        let response: SessionListResponseDTO = try await client.invoke(body)
+        logger.debug("fetchSessions OK — \(response.sessions.count) sessions")
+        return response.sessions
+            .map(SessionEntry.init)
+            .sorted { ($0.updatedAt ?? .distantPast) > ($1.updatedAt ?? .distantPast) }
     }
 
     func fetchTrace(sessionKey: String, limit: Int) async throws -> SessionTrace {

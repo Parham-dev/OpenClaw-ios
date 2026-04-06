@@ -135,10 +135,7 @@ final class AccountStore {
 
         AppConstants.account = activeAccount
         if let acct = activeAccount {
-            logger.info("Account loaded: \(acct.name), agentId=\(acct.agentId), workspacePath='\(acct.workspacePath)', resolved workspaceRoot=\(acct.workspaceRoot)")
-            logger.info("Session keys — main: \(acct.sessionKeyMain), cronPrefix: \(acct.sessionKeyCronPrefix)")
-        } else {
-            logger.warning("No active account after load")
+            logger.info("Account loaded: \(acct.name), agentId=\(acct.agentId)")
         }
     }
 

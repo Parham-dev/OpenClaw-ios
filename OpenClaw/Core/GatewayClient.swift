@@ -64,7 +64,14 @@ struct GatewayClient: GatewayClientProtocol, Sendable {
               let jsonData = text.data(using: .utf8) else {
             throw GatewayError.emptyContent
         }
-        return try JSONDecoder().decode(Response.self, from: jsonData)
+        do {
+            return try JSONDecoder().decode(Response.self, from: jsonData)
+        } catch {
+            // Log the raw JSON and decoding error for debugging
+            let preview = String(text.prefix(500))
+            Self.logger.error("Decode failed for \(String(describing: Response.self)): \(error.localizedDescription)\nRaw JSON: \(preview)")
+            throw error
+        }
     }
 
     // MARK: - POST /v1/chat/completions
