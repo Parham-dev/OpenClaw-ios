@@ -46,9 +46,26 @@ final class RemoteMemoryRepository: MemoryRepository {
     }
 
     func readFile(path: String) async throws -> MemoryFileContent {
-        let body = MemoryGetToolRequest(path: path, sessionKey: sessionKey)
-        let response: MemoryGetResponseDTO = try await client.invoke(body)
-        return MemoryFileContent(path: response.path, text: response.text)
+        // memory_get (via gateway /tools/invoke) only serves memory/ subdirectory files
+        // and MEMORY.md. Root workspace files (SOUL.md, AGENTS.md, etc.) are blocked
+        // by the gateway. Use stats server file-read for those instead.
+        if path.hasPrefix("memory/") || path == "MEMORY.md" {
+            let body = MemoryGetToolRequest(path: path, sessionKey: sessionKey)
+            let response: MemoryGetResponseDTO = try await client.invoke(body)
+            return MemoryFileContent(path: response.path, text: response.text)
+        } else {
+            let response = try await exec("file-read", args: path)
+            guard let stdout = response.stdout, !stdout.isEmpty else {
+                throw MemoryError.fileNotFound(path)
+            }
+            // Parse the JSON response from file-read: {"text": "...", "path": "..."}
+            if let data = stdout.data(using: .utf8),
+               let json = try? JSONDecoder().decode(FileReadResponse.self, from: data) {
+                return MemoryFileContent(path: json.path, text: json.text)
+            }
+            // Fallback: treat stdout as raw content
+            return MemoryFileContent(path: path, text: stdout)
+        }
     }
 
     // MARK: - Helpers
@@ -66,4 +83,11 @@ final class RemoteMemoryRepository: MemoryRepository {
         }
         return response
     }
+}
+
+// MARK: - Private DTOs
+
+private struct FileReadResponse: Decodable {
+    let text: String
+    let path: String
 }
